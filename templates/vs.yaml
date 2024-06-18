@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ .Values.name }}-vs
+  namespace: {{ .Values.namespace }}
+spec:
+  hosts:
+    {{- range $v := .Values.hostnames }}
+    - {{ $v }}
+    {{- end }}
+  gateways:
+  - {{ .Values.name }}-gw
+  http:
+  - name: "http"
+    match:
+    - uri:
+        prefix: "/"
+    route:
+    - destination:
+        host: http

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "labels" . | indent 4 }}
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        {{- include "labels" . | indent 6 }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      volumes:
+      - name: {{ .Values.name }}-tmp
+        emptyDir:
+          sizeLimit: 500Mi
+      containers:
+      - name: app
+        volumeMounts:
+          - mountPath: /tmp
+            name: {{ .Values.name }}-tmp
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          {{- range $k, $v := .Values.securityContext }}
+          {{ $k }}: {{ $v }}
+          {{- end }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            memory: {{ .Values.resources.limits.memory }}
+            cpu: {{ .Values.resources.limits.cpu }}
